@@ -1,18 +1,21 @@
 // lib/api/reportService.ts
-// Frontend API service - NO backend imports here!
+// Frontend API service for reports
 
-const API_BASE_URL = "https://speedline-metro-backend.onrender.com/api/reports";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL 
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api/reports`
+  : "https://speedline-metro-backend.onrender.com/api/reports";
 
-// Generate unique user ID (using sessionStorage)
+console.log('🔗 Report Service API URL:', API_BASE_URL);
+
+// Generate unique user ID (using in-memory storage for Claude artifacts compatibility)
 const getUserId = () => {
   if (typeof window === "undefined") return "user-" + Date.now();
   
-  let userId = sessionStorage.getItem("userId");
-  if (!userId) {
-    userId = "user-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-    sessionStorage.setItem("userId", userId);
+  // Use a simple in-memory approach instead of sessionStorage
+  if (!(window as any).__userId) {
+    (window as any).__userId = "user-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
   }
-  return userId;
+  return (window as any).__userId;
 };
 
 // Submit a new crowd report
@@ -37,17 +40,12 @@ export const submitReport = async (
     });
 
     console.log("Response status:", response.status);
-    console.log("Response statusText:", response.statusText);
-    console.log("Response ok:", response.ok);
     
-    // Get response as text first
     const responseText = await response.text();
-    console.log("Response text length:", responseText.length);
     console.log("Response text:", responseText);
 
     if (!response.ok) {
-      console.error("❌ Response NOT OK - Status:", response.status);
-      let errorData = {};
+      let errorData: any = {};
       try {
         if (responseText) {
           errorData = JSON.parse(responseText);
@@ -57,15 +55,14 @@ export const submitReport = async (
       } catch (e) {
         errorData = { error: responseText || `HTTP ${response.status}` };
       }
-      console.error("❌ Parsed error data:", errorData);
-      console.error("❌ Error message:", errorData.error || errorData.message || errorData);
+      console.error("❌ Error:", errorData);
       throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
     }
 
     const data = JSON.parse(responseText);
     console.log("✅ Report submitted successfully:", data);
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error in submitReport:", error.message);
     throw error;
   }
@@ -79,6 +76,7 @@ export const getAllReports = async (limit: number = 12, station?: string) => {
       url += `&station=${encodeURIComponent(station)}`;
     }
 
+    console.log("📡 Fetching reports from:", url);
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -97,9 +95,10 @@ export const getAllReports = async (limit: number = 12, station?: string) => {
 // Get reports for a specific station
 export const getStationReports = async (station: string, limit: number = 10) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/station/${encodeURIComponent(station)}?limit=${limit}`
-    );
+    const url = `${API_BASE_URL}/station/${encodeURIComponent(station)}?limit=${limit}`;
+    console.log("📡 Fetching station reports from:", url);
+    
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("Failed to fetch station reports");
@@ -117,9 +116,10 @@ export const getStationReports = async (station: string, limit: number = 10) => 
 // Get latest status for a specific station
 export const getStationStatus = async (station: string) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/status/${encodeURIComponent(station)}`
-    );
+    const url = `${API_BASE_URL}/status/${encodeURIComponent(station)}`;
+    console.log("📡 Fetching station status from:", url);
+    
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("Station not found");
@@ -137,7 +137,10 @@ export const getStationStatus = async (station: string) => {
 // Get crowd status summary for all stations
 export const getCrowdSummary = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/summary`);
+    const url = `${API_BASE_URL}/summary`;
+    console.log("📡 Fetching crowd summary from:", url);
+    
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("Failed to fetch crowd summary");
@@ -158,9 +161,10 @@ export const getReportsByLevel = async (
   limit: number = 10
 ) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/level/${level}?limit=${limit}`
-    );
+    const url = `${API_BASE_URL}/level/${level}?limit=${limit}`;
+    console.log("📡 Fetching reports by level from:", url);
+    
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("Failed to fetch reports by level");
@@ -178,7 +182,10 @@ export const getReportsByLevel = async (
 // Get trending stations
 export const getTrendingStations = async (limit: number = 10) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/trending?limit=${limit}`);
+    const url = `${API_BASE_URL}/trending?limit=${limit}`;
+    console.log("📡 Fetching trending stations from:", url);
+    
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("Failed to fetch trending stations");
@@ -196,7 +203,10 @@ export const getTrendingStations = async (limit: number = 10) => {
 // Like a report
 export const likeReport = async (reportId: string) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/${reportId}/like`, {
+    const url = `${API_BASE_URL}/${reportId}/like`;
+    console.log("📡 Liking report:", url);
+    
+    const response = await fetch(url, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
     });
@@ -217,7 +227,10 @@ export const likeReport = async (reportId: string) => {
 // Delete a report
 export const deleteReport = async (reportId: string) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/${reportId}`, {
+    const url = `${API_BASE_URL}/${reportId}`;
+    console.log("📡 Deleting report:", url);
+    
+    const response = await fetch(url, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -236,4 +249,4 @@ export const deleteReport = async (reportId: string) => {
     console.error("❌ Error deleting report:", error);
     throw error;
   }
-}
+};

@@ -6,61 +6,52 @@ import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import RouteSearchPanel from "@/components/route-search-panel"
 import RouteResults from "@/components/route-results"
+import { findRoute, getAllStations, Station } from "@/lib/api"
 
 export default function AIRouteFinder() {
   const [results, setResults] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [searchParams, setSearchParams] = useState({ from: "", to: "" })
-  const [stationsData, setStationsData] = useState([])
+  const [stationsData, setStationsData] = useState<Station[]>([])
   const [stationsLoading, setStationsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch stations data on component mount
   useEffect(() => {
-    const fetchStations = async () => {
-      try {
-        setStationsLoading(true)
-        const response = await fetch("http://localhost:5000/data/stations.json")
-        if (response.ok) {
-          const data = await response.json()
-          setStationsData(data)
-          console.log("✅ Stations data loaded:", data.length, "stations")
-        } else {
-          console.error("Failed to load stations data")
-        }
-      } catch (error) {
-        console.error("Error loading stations:", error)
-      } finally {
-        setStationsLoading(false)
-      }
-    }
-
     fetchStations()
   }, [])
 
+  const fetchStations = async () => {
+    try {
+      setStationsLoading(true)
+      setError(null)
+      console.log("📍 Fetching stations from API...")
+      
+      const stations = await getAllStations()
+      setStationsData(stations)
+      console.log("✅ Stations data loaded:", stations.length, "stations")
+    } catch (error) {
+      console.error("❌ Error loading stations:", error)
+      setError("Failed to load stations data")
+    } finally {
+      setStationsLoading(false)
+    }
+  }
 
   const handleSearch = async (from: string, to: string) => {
     setSearchParams({ from, to })
     setIsLoading(true)
     setResults(null)
-    console.log("Searching route from:", from, "to:", to)
+    setError(null)
+    console.log("🔍 Searching route from:", from, "to:", to)
 
     try {
-      const response = await fetch("http://localhost:5000/api/routes/shortest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from, to }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log("✅ Route found:", data)
-        setResults(data)
-      } else {
-        console.error("Error fetching route:", response.status)
-        setResults(null)
-      }
-    } catch (error) {
-      console.error("Error fetching route:", error)
+      const data = await findRoute(from, to)
+      console.log("✅ Route found:", data)
+      setResults(data)
+    } catch (error: any) {
+      console.error("❌ Error fetching route:", error)
+      setError(error.message || "Failed to find route")
       setResults(null)
     } finally {
       setIsLoading(false)
@@ -121,6 +112,23 @@ export default function AIRouteFinder() {
           >
             <RouteSearchPanel onSearch={handleSearch} isLoading={isLoading} />
           </motion.div>
+
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg"
+            >
+              <p className="text-red-400 text-sm">⚠️ {error}</p>
+              <button
+                onClick={fetchStations}
+                className="mt-2 text-xs text-red-300 hover:text-red-200 underline"
+              >
+                Try reloading stations
+              </button>
+            </motion.div>
+          )}
 
           {/* Results */}
           {results && !stationsLoading && (
@@ -188,10 +196,10 @@ export default function AIRouteFinder() {
             <Link href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
               Home
             </Link>
-            <Link href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
+            <Link href="/community-reports" className="text-blue-400 hover:text-blue-300 transition-colors">
               Report Crowd
             </Link>
-            <Link href="/" className="text-blue-400 hover:text-blue-300 transition-colors">
+            <Link href="https://github.com" className="text-blue-400 hover:text-blue-300 transition-colors">
               GitHub
             </Link>
           </div>

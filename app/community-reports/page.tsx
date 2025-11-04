@@ -2,7 +2,7 @@
 
 import { Zap } from "lucide-react"
 import { motion } from "framer-motion"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import { ReportSubmitForm } from "@/components/report-submit-form"
@@ -23,8 +23,19 @@ const STATUS_CONFIG = {
   heavy: { bg: "bg-red-500", glow: "shadow-lg shadow-red-500/30", icon: "🔴" },
 }
 
+const MOCK_DATA: StationStatus[] = [
+  { station: "Rajiv Chowk", level: "moderate", remarks: "Normal crowd", lastUpdate: "5 mins ago", reportCount: 3 },
+  { station: "Kashmere Gate", level: "light", remarks: "Quiet", lastUpdate: "10 mins ago", reportCount: 1 },
+  { station: "Dwarka", level: "heavy", remarks: "Rush hour", lastUpdate: "2 mins ago", reportCount: 2 },
+  { station: "Lajpat Nagar", level: "moderate", remarks: "Average crowd", lastUpdate: "8 mins ago", reportCount: 1 },
+  { station: "INA", level: "light", remarks: "Few people", lastUpdate: "12 mins ago", reportCount: 1 },
+  { station: "AIIMS", level: "heavy", remarks: "Peak time", lastUpdate: "1 min ago", reportCount: 2 },
+  { station: "Hauz Khas", level: "light", remarks: "Relaxed", lastUpdate: "6 mins ago", reportCount: 1 },
+  { station: "New Delhi", level: "moderate", remarks: "Moderate crowd", lastUpdate: "4 mins ago", reportCount: 1 },
+]
+
 export default function CommunityReportsPage() {
-  const [stations, setStations] = useState<StationStatus[]>([])
+  const [stations, setStations] = useState<StationStatus[]>(MOCK_DATA)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -38,28 +49,25 @@ export default function CommunityReportsPage() {
     try {
       setIsLoading(true)
       setError(null)
+      console.log("🔄 Fetching crowd summary...")
+      
       const data = await getCrowdSummary()
-      setStations(data || [])
-      console.log("✅ Crowd summary loaded:", data?.length, "stations")
-    } catch (err) {
-      console.error("Error fetching crowd data:", err)
-      setError("Failed to load crowd data")
-      setStations(getMockData())
+      
+      if (data && data.length > 0) {
+        setStations(data)
+        console.log("✅ Crowd summary loaded:", data.length, "stations")
+      } else {
+        console.warn("⚠️ No crowd data received, using mock data")
+        setStations(MOCK_DATA)
+      }
+    } catch (err: any) {
+      console.error("❌ Error fetching crowd data:", err)
+      setError(err.message || "Failed to load crowd data")
+      setStations(MOCK_DATA)
     } finally {
       setIsLoading(false)
     }
   }
-
-  const getMockData = (): StationStatus[] => [
-    { station: "Rajiv Chowk", level: "moderate", remarks: "Normal crowd", lastUpdate: "5 mins ago", reportCount: 3 },
-    { station: "Kashmere Gate", level: "light", remarks: "Quiet", lastUpdate: "10 mins ago", reportCount: 1 },
-    { station: "Dwarka", level: "heavy", remarks: "Rush hour", lastUpdate: "2 mins ago", reportCount: 2 },
-    { station: "Lajpat Nagar", level: "moderate", remarks: "Average crowd", lastUpdate: "8 mins ago", reportCount: 1 },
-    { station: "INA", level: "light", remarks: "Few people", lastUpdate: "12 mins ago", reportCount: 1 },
-    { station: "AIIMS", level: "heavy", remarks: "Peak time", lastUpdate: "1 min ago", reportCount: 2 },
-    { station: "Hauz Khas", level: "light", remarks: "Relaxed", lastUpdate: "6 mins ago", reportCount: 1 },
-    { station: "New Delhi", level: "moderate", remarks: "Moderate crowd", lastUpdate: "4 mins ago", reportCount: 1 },
-  ]
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -104,7 +112,6 @@ export default function CommunityReportsPage() {
         </div>
 
         <div className="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          {/* Back to Home Button */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -120,7 +127,6 @@ export default function CommunityReportsPage() {
             </Link>
           </motion.div>
 
-          {/* Title Section */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -176,7 +182,9 @@ export default function CommunityReportsPage() {
                 </motion.div>
 
                 {error && (
-                  <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded mb-4">{error}</p>
+                  <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                    <p className="text-xs text-red-400">{error}</p>
+                  </div>
                 )}
 
                 {isLoading && stations.length === 0 ? (
@@ -200,7 +208,6 @@ export default function CommunityReportsPage() {
                           whileHover={{ scale: 1.02, x: 5 }}
                           className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-violet-500/30 hover:border-violet-500/60 transition-all cursor-pointer"
                         >
-                          {/* Status Dot */}
                           <motion.div
                             animate={{ scale: [1, 1.2, 1] }}
                             transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, delay: idx * 0.1 }}
@@ -209,7 +216,6 @@ export default function CommunityReportsPage() {
                             } ${STATUS_CONFIG[station.level].glow}`}
                           />
 
-                          {/* Station Info */}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-100 line-clamp-1">
                               {station.station}
@@ -217,7 +223,6 @@ export default function CommunityReportsPage() {
                             <p className="text-xs text-gray-400 line-clamp-1">{station.remarks}</p>
                           </div>
 
-                          {/* Level Badge */}
                           <motion.span
                             whileHover={{ scale: 1.05 }}
                             className={`text-xs px-2 py-1 rounded font-medium whitespace-nowrap flex-shrink-0 ${
@@ -236,7 +241,6 @@ export default function CommunityReportsPage() {
                   </div>
                 )}
 
-                {/* View Full Map Link */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
