@@ -1,7 +1,7 @@
 // lib/api/reportService.ts
 // Frontend API service - NO backend imports here!
 
-const API_BASE_URL = "http://localhost:5000/api/reports";
+const API_BASE_URL = "https://speedline-metro-backend.onrender.com/api/reports";
 
 // Generate unique user ID (using sessionStorage)
 const getUserId = () => {
