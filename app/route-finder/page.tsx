@@ -6,7 +6,9 @@ import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import RouteSearchPanel from "@/components/route-search-panel"
 import RouteResults from "@/components/route-results"
-import { findRoute, getAllStations, Station } from "@/lib/api"
+import { getAllStations, Station } from "@/lib/api"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://speedline-metro-backend.onrender.com"
 
 export default function AIRouteFinder() {
   const [results, setResults] = useState(null)
@@ -30,7 +32,7 @@ export default function AIRouteFinder() {
       const stations = await getAllStations()
       setStationsData(stations)
       console.log("✅ Stations data loaded:", stations.length, "stations")
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ Error loading stations:", error)
       setError("Failed to load stations data")
     } finally {
@@ -46,12 +48,30 @@ export default function AIRouteFinder() {
     console.log("🔍 Searching route from:", from, "to:", to)
 
     try {
-      const data = await findRoute(from, to)
+      // Try the /shortest endpoint first (from your original working code)
+      const url = `${API_BASE_URL}/api/routes/shortest`
+      console.log("📡 Calling API:", url)
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ from, to }),
+      })
+
+      console.log("Response status:", response.status, response.statusText)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("❌ Response not OK:", errorText)
+        throw new Error(`Failed to find route: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
       console.log("✅ Route found:", data)
       setResults(data)
     } catch (error: any) {
       console.error("❌ Error fetching route:", error)
-      setError(error.message || "Failed to find route")
+      setError(error.message || "Failed to find route. Please try again.")
       setResults(null)
     } finally {
       setIsLoading(false)
@@ -120,13 +140,27 @@ export default function AIRouteFinder() {
               animate={{ opacity: 1, y: 0 }}
               className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg"
             >
-              <p className="text-red-400 text-sm">⚠️ {error}</p>
-              <button
-                onClick={fetchStations}
-                className="mt-2 text-xs text-red-300 hover:text-red-200 underline"
-              >
-                Try reloading stations
-              </button>
+              <div className="flex items-start gap-3">
+                <span className="text-red-400 text-xl">⚠️</span>
+                <div className="flex-1">
+                  <p className="text-red-400 text-sm font-semibold mb-1">Error</p>
+                  <p className="text-red-300 text-sm">{error}</p>
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-red-400/80">Troubleshooting:</p>
+                    <ul className="text-xs text-red-400/60 space-y-1 list-disc list-inside">
+                      <li>Check if backend is running at: {API_BASE_URL}</li>
+                      <li>Verify the station names are correct</li>
+                      <li>Check browser console for more details</li>
+                    </ul>
+                  </div>
+                  <button
+                    onClick={fetchStations}
+                    className="mt-3 text-xs text-red-300 hover:text-red-200 underline"
+                  >
+                    Try reloading stations
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -167,6 +201,7 @@ export default function AIRouteFinder() {
                 />
               </div>
               <p className="text-gray-400 mt-4">Optimizing your route...</p>
+              <p className="text-gray-500 text-xs mt-2">Searching from {searchParams.from} to {searchParams.to}</p>
             </motion.div>
           )}
 
@@ -178,6 +213,20 @@ export default function AIRouteFinder() {
               className="mt-12 flex flex-col items-center justify-center py-12"
             >
               <div className="text-gray-400">Loading station data...</div>
+            </motion.div>
+          )}
+
+          {/* Debug Info (only in development) */}
+          {process.env.NODE_ENV === 'development' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-6 p-4 bg-slate-800/50 border border-slate-700 rounded-lg text-xs"
+            >
+              <p className="text-gray-400 font-mono">Debug Info:</p>
+              <p className="text-gray-500 font-mono">API Base URL: {API_BASE_URL}</p>
+              <p className="text-gray-500 font-mono">Route Endpoint: /api/routes/shortest</p>
+              <p className="text-gray-500 font-mono">Stations Loaded: {stationsData.length}</p>
             </motion.div>
           )}
         </div>
