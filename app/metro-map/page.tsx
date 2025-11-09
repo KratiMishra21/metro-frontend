@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ChevronLeft, Zap } from "lucide-react"
+import { ChevronLeft, Zap, AlertCircle, RefreshCw } from "lucide-react"
 import { getLiveMapData, getStationDetails } from "@/lib/api/metroMap"
 
 interface StationData {
@@ -40,6 +40,7 @@ export default function MetroMapPage() {
   const [stations, setStations] = useState<StationData[]>([])
   const [selectedStation, setSelectedStation] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
   useEffect(() => {
@@ -50,11 +51,22 @@ export default function MetroMapPage() {
 
   const fetchMapData = async () => {
     try {
+      setError(null)
+      console.log('Fetching metro map data...') // Debug log
+      
       const response = await getLiveMapData()
-      setStations(response.data.stations)
-      setLastUpdated(new Date(response.data.timestamp))
-    } catch (error) {
-      console.error("Error fetching map data:", error)
+      console.log('Response received:', response) // Debug log
+      
+      if (response.success && response.data.stations) {
+        setStations(response.data.stations)
+        setLastUpdated(new Date(response.data.timestamp))
+        console.log('Loaded stations:', response.data.stations.length) // Debug log
+      } else {
+        setError('Failed to load station data')
+      }
+    } catch (err: any) {
+      console.error("Error fetching map data:", err)
+      setError(err.message || 'Failed to connect to server. Please check if backend is running.')
     } finally {
       setIsLoading(false)
     }
@@ -107,7 +119,8 @@ export default function MetroMapPage() {
     high: stations.filter(s => s.crowdLevel === 'high').length,
   }
 
-  if (isLoading && stations.length === 0) {
+  // Loading State
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0B0B10] flex items-center justify-center">
         <div className="text-center">
@@ -117,11 +130,106 @@ export default function MetroMapPage() {
             className="w-12 h-12 border-4 border-violet-500/30 border-t-violet-500 rounded-full mx-auto mb-4"
           />
           <p className="text-gray-400">Loading metro network...</p>
+          <p className="text-gray-500 text-sm mt-2">Connecting to backend...</p>
         </div>
       </div>
     )
   }
 
+  // Error State
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0B0B10]">
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="border-b border-violet-500/20 bg-gradient-to-b from-[#1A1A25] to-[#0B0B10] backdrop-blur-xl"
+        >
+          <div className="relative z-10 mx-auto max-w-7xl px-6 py-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors px-3 py-2 rounded-lg border border-violet-500/30 hover:border-violet-500/60 hover:bg-violet-500/10 mb-4"
+            >
+              <ChevronLeft size={16} />
+              Back to Home
+            </Link>
+          </div>
+        </motion.header>
+
+        <div className="flex items-center justify-center min-h-[60vh] px-6">
+          <div className="max-w-md text-center">
+            <div className="inline-flex p-4 bg-red-500/10 rounded-full mb-4">
+              <AlertCircle className="w-12 h-12 text-red-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Connection Error</h2>
+            <p className="text-gray-400 mb-6">{error}</p>
+            
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-6 text-left">
+              <p className="text-sm text-gray-300 mb-2">Please check:</p>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Backend server is running</li>
+                <li>• API URL is correct in .env.local</li>
+                <li>• CORS is configured properly</li>
+                <li>• Database is connected</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => {
+                setIsLoading(true)
+                setError(null)
+                fetchMapData()
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors"
+            >
+              <RefreshCw size={16} />
+              Retry Connection
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Empty State - No Stations
+  if (stations.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#0B0B10]">
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="border-b border-violet-500/20 bg-gradient-to-b from-[#1A1A25] to-[#0B0B10] backdrop-blur-xl"
+        >
+          <div className="relative z-10 mx-auto max-w-7xl px-6 py-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors px-3 py-2 rounded-lg border border-violet-500/30 hover:border-violet-500/60 hover:bg-violet-500/10"
+            >
+              <ChevronLeft size={16} />
+              Back to Home
+            </Link>
+          </div>
+        </motion.header>
+
+        <div className="flex items-center justify-center min-h-[60vh] px-6">
+          <div className="text-center">
+            <div className="inline-flex p-4 bg-yellow-500/10 rounded-full mb-4">
+              <AlertCircle className="w-12 h-12 text-yellow-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">No Station Data</h2>
+            <p className="text-gray-400 mb-4">
+              The metro network database is empty. Please add stations to see the map.
+            </p>
+            <p className="text-sm text-gray-500">
+              Make sure stations.json is loaded in your database.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Main Map View
   return (
     <div className="min-h-screen bg-[#0B0B10]">
       {/* Header */}
@@ -135,11 +243,11 @@ export default function MetroMapPage() {
         
         <div className="relative z-10 mx-auto max-w-7xl px-6 py-8">
           <Link
-            href="/community-reports"
+            href="/"
             className="inline-flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors px-3 py-2 rounded-lg border border-violet-500/30 hover:border-violet-500/60 hover:bg-violet-500/10 mb-4"
           >
             <ChevronLeft size={16} />
-            Back to Reports
+            Back to Home
           </Link>
           
           <div className="flex items-center justify-between">
@@ -160,11 +268,21 @@ export default function MetroMapPage() {
               </div>
             </div>
 
-            <div className="text-right">
-              <div className="text-xs text-gray-400">Last Updated</div>
-              <div className="text-sm text-violet-300 font-mono">
-                {lastUpdated.toLocaleTimeString()}
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-xs text-gray-400">Last Updated</div>
+                <div className="text-sm text-violet-300 font-mono">
+                  {lastUpdated.toLocaleTimeString()}
+                </div>
               </div>
+
+              <button
+                onClick={fetchMapData}
+                className="p-2 bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors"
+                title="Refresh data"
+              >
+                <RefreshCw size={16} className="text-white" />
+              </button>
             </div>
           </div>
 
@@ -350,7 +468,7 @@ export default function MetroMapPage() {
             </div>
 
             {/* Selected Station Info */}
-            {selectedStation && (
+            {selectedStation ? (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -430,6 +548,12 @@ export default function MetroMapPage() {
                   )}
                 </div>
               </motion.div>
+            ) : (
+              <div className="border border-violet-500/30 rounded-2xl bg-gradient-to-br from-violet-500/5 via-slate-900/50 to-pink-500/5 p-6 backdrop-blur-xl">
+                <p className="text-sm text-gray-400 text-center">
+                  Click on a station to view details
+                </p>
+              </div>
             )}
 
             {/* Metro Lines */}
