@@ -6,7 +6,7 @@ export interface StationData {
   _id: string;
   stationId: string;
   name: string;
-  coordinates: [number, number]; // [lng, lat] - GeoJSON format
+  coordinates: [number, number];
   lines: string[];
   isInterchange: boolean;
   crowdLevel: 'low' | 'medium' | 'high';
@@ -23,21 +23,12 @@ export interface LiveMapResponse {
   };
 }
 
-export interface StationDetailsResponse {
-  success: boolean;
-  data: {
-    station: any;
-    currentCrowdLevel: 'low' | 'medium' | 'high';
-    recentReports: any[];
-    totalReportsLastHour: number;
-  };
-}
-
 export async function getLiveMapData(): Promise<LiveMapResponse> {
   try {
-    console.log('Fetching from:', `${API_URL}/metro-map/live-data`);
+    const url = `${API_URL}/api/metro-map/live-data`;
+    console.log('🔍 Fetching live map data from:', url);
     
-    const response = await fetch(`${API_URL}/metro-map/live-data`, {
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -45,28 +36,28 @@ export async function getLiveMapData(): Promise<LiveMapResponse> {
       cache: 'no-store'
     });
     
+    console.log('📡 Response status:', response.status);
+    
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Error response:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
-    console.log('Received data:', data);
+    console.log('✅ Received data:', data);
     
     return data;
   } catch (error: any) {
-    console.error('API Error:', error);
-    throw new Error(error.message || 'Failed to fetch live map data');
+    console.error('❌ API Error:', error);
+    throw error;
   }
 }
 
-export async function getStationDetails(stationId: string): Promise<StationDetailsResponse> {
+export async function getStationDetails(stationId: string) {
   try {
-    const response = await fetch(`${API_URL}/metro-map/stations/${stationId}/details`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const url = `${API_URL}/api/metro-map/stations/${stationId}/details`;
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -75,7 +66,7 @@ export async function getStationDetails(stationId: string): Promise<StationDetai
     return await response.json();
   } catch (error: any) {
     console.error('API Error:', error);
-    throw new Error(error.message || 'Failed to fetch station details');
+    throw error;
   }
 }
 
@@ -87,12 +78,8 @@ export async function getNearbyStations(longitude: number, latitude: number, max
       ...(maxDistance && { maxDistance: maxDistance.toString() })
     });
 
-    const response = await fetch(`${API_URL}/metro-map/nearby?${params}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const url = `${API_URL}/api/metro-map/nearby?${params}`;
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -101,6 +88,6 @@ export async function getNearbyStations(longitude: number, latitude: number, max
     return await response.json();
   } catch (error: any) {
     console.error('API Error:', error);
-    throw new Error(error.message || 'Failed to fetch nearby stations');
+    throw error;
   }
 }
