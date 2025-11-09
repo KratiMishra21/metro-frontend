@@ -9,6 +9,7 @@ const features = [
     title: "Live Metro Map",
     description: "See real-time crowd levels (Green / Yellow / Red) across all stations.",
     gradient: "from-blue-500 to-cyan-500",
+    link: "/metro-map",
   },
   {
     icon: Zap,
