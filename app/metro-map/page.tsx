@@ -5,7 +5,11 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { ChevronLeft, Zap } from "lucide-react"
 import { getCrowdSummary } from "@/lib/api/reportService"
+import LiveMetroMap from '@/components/ui/live-metro-map';
 
+export default function MetroMapPage() {
+  return <LiveMetroMap />;
+}
 interface StationData {
   station: string
   level: "light" | "moderate" | "heavy"
