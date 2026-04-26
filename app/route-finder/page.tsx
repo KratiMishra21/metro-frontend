@@ -6,7 +6,7 @@ import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import RouteSearchPanel from "@/components/route-search-panel"
 import RouteResults from "@/components/route-results"
-import { getAllStations, Station } from "@/lib/api"
+import { Station } from "@/lib/api"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://speedline-metro-backend.onrender.com"
 
