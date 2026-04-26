@@ -21,7 +21,8 @@ export default function MapPreviewSection() {
           <div className="absolute inset-0 bg-gradient-radial from-blue-500/20 via-transparent to-transparent pointer-events-none z-10" />
 
           {/* Real Glowing Map */}
-          <div className="relative h-96 sm:h-[500px] overflow-hidden">
+         // REMOVE overflow-hidden and also remove the misleading overlay text
+          <div className="relative h-96 sm:h-[500px]">
             <GlowingMap />
           </div>
 
