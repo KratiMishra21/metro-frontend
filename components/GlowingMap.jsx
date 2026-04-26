@@ -224,9 +224,9 @@ export default function GlowingMap() {
     });
   }, [mapLoaded, stationData]);
 
-  return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full" />
+ return (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div ref={mapContainer} style={{ width: "100%", height: "100%", minHeight: "400px" }} />
 
       {/* Live indicator */}
       <div
