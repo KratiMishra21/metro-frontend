@@ -25,13 +25,7 @@ export default function MapPreviewSection() {
             <GlowingMap />
           </div>
 
-          {/* Floating info overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-20 pointer-events-none">
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-400">60+ Stations Connected</p>
-              <p className="text-2xl font-bold text-blue-400">Real-Time Coverage</p>
-            </div>
-          </div>
+         
 
           {/* Demo button overlay */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
