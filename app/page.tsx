@@ -7,7 +7,6 @@ import MapPreviewSection from "@/components/sections/map-preview"
 import HowItWorksSection from "@/components/sections/how-it-works"
 import ImpactSection from "@/components/sections/impact"
 import Footer from "@/components/sections/footer"
-import ThemeToggle from "@/components/theme-toggle"
 import Link from "next/link";
 
 export default function Home() {
@@ -25,7 +24,7 @@ export default function Home() {
     <main className="bg-gradient-to-b from-[#0a0a0a] via-[#0f0f1e] to-[#0a0a0a] min-h-screen text-white overflow-hidden">
       {/* Theme Toggle */}
       <div className="fixed top-6 right-6 z-50">
-        <ThemeToggle isDark={isDark} setIsDark={setIsDark} />
+  
       </div>
 
       {/* Background animated grid */}
