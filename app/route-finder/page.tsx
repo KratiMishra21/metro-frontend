@@ -23,22 +23,19 @@ export default function AIRouteFinder() {
     fetchStations()
   }, [])
 
-  const fetchStations = async () => {
-    try {
-      setStationsLoading(true)
-      setError(null)
-      console.log("📍 Fetching stations from API...")
-      
-      const stations = await getAllStations()
-      setStationsData(stations)
-      console.log("✅ Stations data loaded:", stations.length, "stations")
-    } catch (error: any) {
-      console.error("❌ Error loading stations:", error)
-      setError("Failed to load stations data")
-    } finally {
-      setStationsLoading(false)
-    }
+ const fetchStations = async () => {
+  try {
+    setStationsLoading(true)
+    setError(null)
+    const res = await fetch(`${API_BASE_URL}/data/stations.json`)
+    const stations = await res.json()
+    setStationsData(stations)
+  } catch (error: any) {
+    setError("Failed to load stations data")
+  } finally {
+    setStationsLoading(false)
   }
+}
 
   const handleSearch = async (from: string, to: string) => {
     setSearchParams({ from, to })
