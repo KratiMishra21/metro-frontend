@@ -1,5 +1,5 @@
 "use client"
-
+import Link from "next/link"
 import { ArrowRight, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -25,25 +25,27 @@ export default function HeroSection() {
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/75 transition-all duration-300"
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            View Live Crowd Map
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+        <Link href="/metro-map">
+  <Button
+    size="lg"
+    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg shadow-blue-500/50 hover:shadow-blue-500/75 transition-all duration-300"
+  >
+    <Zap className="w-4 h-4 mr-2" />
+    View Live Crowd Map
+    <ArrowRight className="w-4 h-4 ml-2" />
+  </Button>
+</Link>
 
-          <Button
-            size="lg"
-            variant="outline"
-            className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400 transition-all duration-300 shadow-lg shadow-purple-500/30 bg-transparent"
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Report Crowd Status
-          </Button>
-        </div>
+<Link href="/community-reports">
+  <Button
+    size="lg"
+    variant="outline"
+    className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400 transition-all duration-300 shadow-lg shadow-purple-500/30 bg-transparent"
+  >
+    <Zap className="w-4 h-4 mr-2" />
+    Report Crowd Status
+  </Button>
+</Link>
 
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
